@@ -4,6 +4,7 @@ const authJwt = require('./verifyJwtToken');
 module.exports = function(app) {
 
   const controller = require('../controller/controller.js');
+  const bookController = require('../controller/book.controller.js');
  
 	app.post('/api/auth/signup', [verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.checkRolesExisted], controller.signup);
 	
@@ -14,4 +15,9 @@ module.exports = function(app) {
 	app.get('/api/test/pm', [authJwt.verifyToken, authJwt.isPmOrAdmin], controller.managementBoard);
 	
 	app.get('/api/test/admin', [authJwt.verifyToken, authJwt.isAdmin], controller.adminBoard);
-}
+	
+	// book details and collection
+	app.post('/api/book/add', [authJwt.verifyToken], bookController.addBookToCollection);
+	app.get('/api/book/collection/:userId',[authJwt.verifyToken], bookController.getCollectionByUserId);
+	
+};
