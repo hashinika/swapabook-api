@@ -18,6 +18,7 @@ module.exports = function(app) {
 	
 	// book details and collection
 	app.post('/api/book/add', [authJwt.verifyToken], bookController.addBookToCollection);
-	app.get('/api/book/collection/:userId',[authJwt.verifyToken], bookController.getCollectionByUserId);
-	
+	app.get('/api/book/collection/',[authJwt.verifyToken], bookController.getCollectionByUserId);
+  app.get('/api/book/swapList/',[authJwt.verifyToken], bookController.getSwapList);
+  app.post('/api/book/addSwipeRight', [authJwt.verifyToken], bookController.addBookAsSwiped);
 };

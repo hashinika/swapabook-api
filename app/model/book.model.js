@@ -41,6 +41,9 @@ module.exports = (sequelize, Sequelize) => {
     },
     webReaderLink: {
       type: Sequelize.STRING
+    },
+    bookQualityRating: {
+      type: Sequelize.INTEGER
     }
   });
   
