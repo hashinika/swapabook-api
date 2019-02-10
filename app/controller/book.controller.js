@@ -70,13 +70,27 @@ exports.addBookAsSwiped = (req, res) => {
   
   Swap.create(swapDTO).then(swap => {
     // res.status(200).json(swap);
+    console.log('Swipe right Logged in user id : ', req.userId);
+    
     Swap.findAll({
+      raw: true,
       where: {
         BOOK_OWNER_ID: req.userId,
         USER_ID: swap.BOOK_OWNER_ID
       }
     }).then(swapMatch => {
-      res.status(200).json(swapMatch);
+      let BookDetails = {};
+      if(swapMatch.length>0 && swapMatch[0].BOOK_ID) {
+        console.log('HDV MATCH FOUND!!!', swapMatch[0].BOOK_ID);
+        getBookDetails(swapMatch[0].BOOK_ID).then(
+          BookDetails => {
+             return res.status(200).json(BookDetails);
+          }
+        )
+      } else {
+        res.status(200).json(swapMatch);
+      }
+      
     }).catch(err => {
       res.status(500).json({
         "description": "Failure at swap match",
@@ -85,6 +99,22 @@ exports.addBookAsSwiped = (req, res) => {
     })
   }).catch(err => {
     res.status(500).send("Fail! Error -> " + err);
+  })
+};
+
+
+const getBookDetails  = (bookId) => {
+  console.log('HDV Book ID DET CALLED', bookId);
+  return Book.findOne({
+    raw: true,
+    where: { id: bookId}
+  }).then(bookDetails => {
+    return bookDetails;
+  }).catch(err => {
+    res.status(500).json({
+      "description": "Error in getBookDetails",
+      "error": err
+    });
   })
 };
 
