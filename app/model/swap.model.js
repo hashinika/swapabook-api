@@ -20,7 +20,11 @@ module.exports = (sequelize, Sequelize) => {
         model: 'users',
         key: 'id',
       }
-    }
+    },
+    location: { type: Sequelize.STRING },
+    datetime: { type: Sequelize.STRING },
+    meetingBy: { type: Sequelize.STRING},
+    isAccepted: { type: Sequelize.STRING}
   });
   
   return Swap;

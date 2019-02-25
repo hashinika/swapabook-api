@@ -84,7 +84,10 @@ exports.addBookAsSwiped = (req, res) => {
         console.log('HDV MATCH FOUND!!!', swapMatch[0].BOOK_ID);
         getBookDetails(swapMatch[0].BOOK_ID).then(
           BookDetails => {
-             return res.status(200).json(BookDetails);
+             return res.status(200).json({
+               ...BookDetails,
+               swapId: swapMatch[0].id
+             });
           }
         )
       } else {
