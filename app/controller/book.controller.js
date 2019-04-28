@@ -6,6 +6,51 @@ const Meeting = db.meeting;
 
 const Op = db.Sequelize.Op;
 
+// redeemBookScore
+exports.redeemBookScore = (req, res) => {
+  console.log("Processing func -> redeemBookScore");
+ 
+  db.sequelize.query(
+    `
+    select
+    ISBN_13,
+    us2.id as userId,
+    COALESCE(books.pageCount, 100) + 100 + (select score from users us1 where us1.id = us2.id) AS pageCount
+    from
+    books
+    inner join users as us2 on books.userId = us2.id
+    where books.ISBN_13 = ${req.body.ISBN_13} and books.userId !=${req.userId}  LIMIT 1;
+    `,{ type: db.sequelize.QueryTypes.SELECT }).then( rows =>{
+      
+      if(rows.length > 0) {
+        const newScore = rows[0].pageCount;
+        // update user score
+        User.update(
+          {
+            score: db.sequelize.literal(`COALESCE(score, 100) + ${rows[0].pageCount}`)
+          },
+          {
+            where: {
+              id: req.userId,
+            }
+          }
+        ).then(user => {
+          console.log('User Score Updated : ', user);
+          res.status(200).json({userId: req.userId});
+        }).catch(err => {
+            res.status(500).send("Fail! Error -> " + err);
+        });
+      } else {
+        res.status(200).json({})
+      }
+        // res.status(200).json(rows);
+        // console.log('Meeting Party One User: ', req.userId);
+    }).catch(err => {
+        res.status(500).send("Fail! Error -> " + err);
+    });
+
+};
+
 // add a book to the collection
 exports.addBookToCollection = (req, res) => {
   // Save User to Database
@@ -50,7 +95,7 @@ exports.addBookToCollection = (req, res) => {
   Book.create(bookDTO).then(book => {
     res.status(200).json(book);
   }).catch(err => {
-    res.status(500).send("Fail! Error -> " + err);
+    res.status(500).json({msg: err});
   })
 };
 
@@ -82,19 +127,18 @@ exports.addBookAsSwiped = (req, res) => {
     }).then(swapMatch => {
       let BookDetails = {};
       if(swapMatch.length>0 && swapMatch[0].BOOK_ID) {
-        console.log('HDV MATCH FOUND!!!', swapMatch[0].BOOK_ID);
+        console.log('MATCH FOUND!!!', swapMatch[0].BOOK_ID);
         
         // create the meeting initial record
         const meetingDTO = {
           MEETING_PARTY_ONE_USER:  req.body.BOOK_OWNER_ID,
-          MEETING_PARTY_ONE_BOOK_ID: swapMatch[0].BOOK_ID,
+          MEETING_PARTY_ONE_BOOK_ID: req.body.BOOK_ID,
           MEETING_PARTY_TWO_USER: req.userId,
-          MEETING_PARTY_TWO_BOOK_ID: req.body.BOOK_ID
+          MEETING_PARTY_TWO_BOOK_ID: swapMatch[0].BOOK_ID
         };
   
         Meeting.create(meetingDTO).then(meetingInit => {
-         
-          console.log('HDV Match stage 2');
+
           getBookDetails(swapMatch[0].BOOK_ID).then(
             BookDetails => {
               return res.status(200).json({
@@ -124,7 +168,7 @@ exports.addBookAsSwiped = (req, res) => {
 
 
 const getBookDetails  = (bookId) => {
-  console.log('HDV Book ID DET CALLED', bookId);
+  console.log('Book ID DET CALLED', bookId);
   return Book.findOne({
     raw: true,
     where: { id: bookId}
@@ -157,7 +201,8 @@ exports.getCollectionByUserId = (req, res) => {
 exports.getSwapList = (req, res) => {
   console.log("Processing func -> getSwapList userId:", req.userId);
   Book.findAll({
-    where: { userId: { [Op.not]: req.userId}}
+    where: { userId: { [Op.not]: req.userId}},
+    include: [User]
   }).then(books => {
     res.status(200).json(books);
   }).catch(err => {

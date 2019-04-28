@@ -23,7 +23,7 @@ verifyToken = (req, res, next) => {
 		req.userId = decoded.id;
 		next();
 	});
-}
+};
 
 isAdmin = (req, res, next) => {
 	let token = req.headers['x-access-token'];

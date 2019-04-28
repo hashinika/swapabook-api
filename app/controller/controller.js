@@ -26,13 +26,13 @@ exports.signup = (req, res) => {
 		  }
 		}).then(roles => {
 			user.addRoles(roles).then(() => {
-				res.send("User registered successfully!");
-            });
+    		res.status(200).json({reason: "User registered successfully!"});
+      });
 		}).catch(err => {
-			res.status(500).send("Error -> " + err);
+      res.status(500).json({reason: err});
 		});
 	}).catch(err => {
-		res.status(500).send("Fail! Error -> " + err);
+    res.status(500).json({reason: err});
 	})
 }
 
@@ -62,6 +62,19 @@ exports.signin = (req, res) => {
 	}).catch(err => {
 		res.status(500).send('Error -> ' + err);
 	});
+}
+
+exports.user = (req, res) => {
+  User.findOne({
+    where: {id: req.userId}
+  }).then(user => {
+    res.status(200).json(user);
+}).catch(err => {
+    res.status(500).json({
+    "description": "Can not access User Page",
+    "error": err
+  });
+})
 }
 
 exports.userContent = (req, res) => {
